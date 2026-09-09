@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Inventory</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 640px; margin: 40px auto; }
+      ul { padding-left: 20px; }
+      li { margin-bottom: 6px; }
+      form { margin-top: 24px; border-top: 1px solid #ddd; padding-top: 16px; }
+      label { display: block; margin-top: 10px; font-weight: bold; }
+      input[type=text] { width: 100%; padding: 6px; box-sizing: border-box; }
+      button { margin-top: 16px; padding: 8px 16px; }
+      .error { color: #b00020; }
+    </style>
+  </head>
+  <body>
+    <h1>Inventory</h1>
+
+    <% if (error) { %>
+      <p class="error"><%= error %></p>
+    <% } %>
+
+    <ul>
+      <% books.forEach(function(book) { %>
+        <li><%= book.title %> - <%= book.author %></li>
+      <% }); %>
+    </ul>
+
+    <form action="/inventory" method="POST">
+      <p><strong>Add Book:</strong></p>
+      <label for="title">Title</label>
+      <input type="text" id="title" name="title" required>
+
+      <label for="author">Author</label>
+      <input type="text" id="author" name="author" required>
+
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>
