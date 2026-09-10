@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    networks:
+      - bookstore-net
+
+  inventory:
+    build: ./lb4-inventory
+    container_name: inventory
+    environment:
+      MONGO_URL: mongodb://mongo:27017/inventorydb
+    depends_on:
+      - mongo
+    networks:
+      - bookstore-net
+
+  order:
+    build: ./lb4-order
+    container_name: order
+    environment:
+      MONGO_URL: mongodb://mongo:27017/orderdb
+    depends_on:
+      - mongo
+    networks:
+      - bookstore-net
+
+  payment:
+    build: ./lb4-payment
+    container_name: payment
+    environment:
+      MONGO_URL: mongodb://mongo:27017/paymentdb
+    depends_on:
+      - mongo
+    networks:
+      - bookstore-net
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - '9001:9001'
+    environment:
+      INVENTORY_URL: http://inventory:3000
+      ORDER_URL: http://order:3001
+      PAYMENT_URL: http://payment:3002
+    depends_on:
+      - inventory
+      - order
+      - payment
+    networks:
+      - bookstore-net
+
+  bookstore-web-app:
+    build: ./bookstore-web-app
+    container_name: bookstore-web-app
+    ports:
+      - '8082:8082'
+    environment:
+      GATEWAY_URL: http://gateway:9001
+    depends_on:
+      - gateway
+    networks:
+      - bookstore-net
+
+networks:
+  bookstore-net:
+    driver: bridge

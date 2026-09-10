@@ -1,9 +1,9 @@
-import {ApplicationConfig, Lb4ServiceApplication} from './application';
+import {ApplicationConfig, Lb4PaymentApplication} from './application';
 
 export * from './application';
 
 export async function main(options: ApplicationConfig = {}) {
-  const app = new Lb4ServiceApplication(options);
+  const app = new Lb4PaymentApplication(options);
   await app.boot();
   await app.start();
 
@@ -17,7 +17,7 @@ export async function main(options: ApplicationConfig = {}) {
 if (require.main === module) {
   const config = {
     rest: {
-      port: +(process.env.PORT ?? 3000),
+      port: +(process.env.PORT ?? 3002),
       host: process.env.HOST,
       gracePeriodForClose: 5000,
       openApiSpec: {

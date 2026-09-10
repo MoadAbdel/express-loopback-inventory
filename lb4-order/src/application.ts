@@ -8,7 +8,7 @@ import {MySequence} from './sequence';
 
 export {ApplicationConfig};
 
-export class Lb4ServiceApplication extends BootMixin(
+export class Lb4OrderApplication extends BootMixin(
   RepositoryMixin(RestApplication),
 ) {
   constructor(options: ApplicationConfig = {}) {

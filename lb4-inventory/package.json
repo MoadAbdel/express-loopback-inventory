@@ -1,5 +1,5 @@
 {
-  "name": "lb4-service",
+  "name": "lb4-inventory",
   "version": "1.0.0",
   "description": "Inventory microservice (LoopBack 4 + MongoDB)",
   "main": "dist/index.js",

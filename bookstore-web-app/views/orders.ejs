@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Orders</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 640px; margin: 40px auto; }
+      ul { padding-left: 20px; }
+      li { margin-bottom: 6px; }
+      form { margin-top: 24px; border-top: 1px solid #ddd; padding-top: 16px; }
+      label { display: block; margin-top: 10px; font-weight: bold; }
+      input[type=text], input[type=number] { width: 100%; padding: 6px; box-sizing: border-box; }
+      button { margin-top: 16px; padding: 8px 16px; }
+      .error { color: #b00020; }
+      nav a { margin-right: 12px; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="/inventory">Inventory</a>
+      <a href="/orders">Orders</a>
+      <a href="/payments">Payments</a>
+    </nav>
+    <h1>Orders</h1>
+
+    <% if (error) { %>
+      <p class="error"><%= error %></p>
+    <% } %>
+
+    <ul>
+      <% orders.forEach(function(order) { %>
+        <li><%= order.product %> - qty: <%= order.quantity %> - <%= order.status %></li>
+      <% }); %>
+    </ul>
+
+    <form action="/orders" method="POST">
+      <p><strong>Add Order:</strong></p>
+      <label for="product">Product</label>
+      <input type="text" id="product" name="product" required>
+
+      <label for="quantity">Quantity</label>
+      <input type="number" id="quantity" name="quantity" min="1" required>
+
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>

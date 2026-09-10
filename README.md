@@ -1,62 +1,79 @@
-# Mini-Cas Pratique : Intégration Frontend Express + Microservice LoopBack 4 + MongoDB
+# Bookstore microservices : LoopBack 4, API Gateway, Docker
 
 ## Architecture
 
 ```
-frontend/     # Express (express-generator), route /inventory (port 8080)
-lb4-service/  # Microservice REST LoopBack 4 + MongoDB (port 3000)
+bookstore-web-app/   # Frontend Express (port 8082) — vues /inventory, /orders, /payments
+gateway/             # API Gateway Express (port 9001), proxy vers les 3 microservices
+lb4-inventory/       # Microservice LoopBack 4 "Book" (port 3000)
+lb4-order/           # Microservice LoopBack 4 "Order" (port 3001)
+lb4-payment/         # Microservice LoopBack 4 "Payment" (port 3002)
+docker-compose.yml   # Orchestration de l'ensemble + un seul container MongoDB partagé
 ```
 
-Le frontend Express sert la page `/inventory` (liste + formulaire "Add Book").
-A la soumission du formulaire, il fait un `POST /books` vers l'API LoopBack 4,
-puis redirige vers `/inventory` (nouveau `GET`), ce qui rafraîchit la liste et
-réinitialise le formulaire.
-
-## Prérequis
-
-- Node.js
-- MongoDB (via Docker, ou une instance locale)
-
-## 1. Démarrer MongoDB
-
-```bash
-docker run -d --name inventory-mongo -p 27017:27017 mongo:7
+```
+Navigateur ──▶ bookstore-web-app (8082) ──▶ gateway (9001) ──▶ inventory (3000) ─┐
+                                                             ├─▶ order (3001)     ├─▶ mongo (27017)
+                                                             └─▶ payment (3002) ──┘
 ```
 
-## 2. Démarrer le microservice LoopBack 4
+Le gateway route :
+- `/api/inventory/*` → `inventory:3000`
+- `/api/order/*` → `order:3001`
+- `/api/payment/*` → `payment:3002`
+
+Chaque microservice LoopBack 4 a son propre model/datasource/controller/repository,
+mais tous pointent vers le **même container MongoDB** (`mongo:latest`), chacun
+dans sa propre base (`inventorydb`, `orderdb`, `paymentdb`) — comme suggéré par
+l'énoncé pour simplifier.
+
+## Lancer avec Docker Compose (recommandé)
 
 ```bash
-cd lb4-service
-npm install
-npm run build
-MONGO_URL="mongodb://localhost:27017/inventory" PORT=3000 npm start
+docker-compose up -d --build
 ```
 
-Endpoints exposés :
-- `POST http://localhost:3000/books` — crée un livre `{ "title": "...", "author": "..." }`
-- `GET http://localhost:3000/books` — liste les livres
-- Explorateur OpenAPI : `http://localhost:3000/explorer`
+Cela construit et démarre les 6 containers : `mongo`, `inventory`, `order`,
+`payment`, `gateway`, `bookstore-web-app`.
 
-## 3. Démarrer le frontend Express
+Tester :
+- Frontend : http://localhost:8082/inventory, /orders, /payments
+- Gateway direct : `curl http://localhost:9001/api/inventory/books`,
+  `.../api/order/orders`, `.../api/payment/payments`
+
+Arrêter :
 
 ```bash
-cd frontend
-npm install
-LB4_API_URL="http://localhost:3000" PORT=8080 npm start
+docker-compose down
 ```
 
-Ouvrir : [http://localhost:8080/inventory](http://localhost:8080/inventory)
+## Lancer en local sans Docker (dev)
 
-## Comportement attendu
-
-1. La page `/inventory` affiche la liste des livres sous forme `Titre - Auteur`
-   et un formulaire "Add Book:" (champs Title, Author, bouton Submit).
-2. A la soumission, le livre est inséré dans MongoDB via l'API LoopBack 4.
-3. La page se rafraîchit automatiquement, affiche le nouveau livre dans la
-   liste et le formulaire repart vide.
-
-## Vérifier la persistance directement dans MongoDB
+Prérequis : MongoDB (`docker run -d --name mongo -p 27017:27017 mongo:latest`).
 
 ```bash
-docker exec -it inventory-mongo mongosh inventory --eval "db.Book.find().pretty()"
+# chaque microservice LoopBack 4
+cd lb4-inventory && npm install && npm run build && MONGO_URL="mongodb://localhost:27017/inventorydb" PORT=3000 npm start
+cd lb4-order     && npm install && npm run build && MONGO_URL="mongodb://localhost:27017/orderdb"     PORT=3001 npm start
+cd lb4-payment   && npm install && npm run build && MONGO_URL="mongodb://localhost:27017/paymentdb"   PORT=3002 npm start
+
+# gateway
+cd gateway && npm install && \
+  INVENTORY_URL="http://localhost:3000" ORDER_URL="http://localhost:3001" PAYMENT_URL="http://localhost:3002" \
+  PORT=9001 npm start
+
+# frontend
+cd bookstore-web-app && npm install && GATEWAY_URL="http://localhost:9001" PORT=8082 npm start
+```
+
+Ouvrir [http://localhost:8082/inventory](http://localhost:8082/inventory).
+
+## Vérifier la persistance dans MongoDB
+
+```bash
+docker exec -it mongo mongosh --eval "
+  db.getSiblingDB('inventorydb').Book.find().pretty();
+  db.getSiblingDB('orderdb').Order.find().pretty();
+  db.getSiblingDB('paymentdb').Payment.find().pretty();
+"
 ```
