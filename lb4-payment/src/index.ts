@@ -1,4 +1,6 @@
 import {ApplicationConfig, Lb4PaymentApplication} from './application';
+import {PaymentRepository} from './repositories';
+import {startOrderCreatedConsumer} from './queue/rabbitmq-consumer';
 
 export * from './application';
 
@@ -10,6 +12,9 @@ export async function main(options: ApplicationConfig = {}) {
   const url = app.restServer.url;
   console.log(`Server is running at ${url}`);
   console.log(`Try ${url}/ping`);
+
+  const paymentRepository = await app.getRepository(PaymentRepository);
+  await startOrderCreatedConsumer(paymentRepository);
 
   return app;
 }

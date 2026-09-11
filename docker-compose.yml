@@ -17,13 +17,23 @@ services:
     networks:
       - bookstore-net
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - '15672:15672'
+    networks:
+      - bookstore-net
+
   order:
     build: ./lb4-order
     container_name: order
     environment:
       MONGO_URL: mongodb://mongo:27017/orderdb
+      RABBITMQ_URL: amqp://rabbitmq:5672
     depends_on:
       - mongo
+      - rabbitmq
     networks:
       - bookstore-net
 
@@ -32,8 +42,10 @@ services:
     container_name: payment
     environment:
       MONGO_URL: mongodb://mongo:27017/paymentdb
+      RABBITMQ_URL: amqp://rabbitmq:5672
     depends_on:
       - mongo
+      - rabbitmq
     networks:
       - bookstore-net
 

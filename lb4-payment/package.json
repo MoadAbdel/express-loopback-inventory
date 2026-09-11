@@ -17,12 +17,14 @@
     "@loopback/repository": "^7.0.5",
     "@loopback/rest": "^14.0.5",
     "@loopback/rest-explorer": "^7.0.5",
+    "amqplib": "^0.10.4",
     "loopback-connector-mongodb": "^6.3.1",
     "tslib": "^2.6.2"
   },
   "devDependencies": {
     "@loopback/build": "^11.0.4",
     "@loopback/eslint-config": "^15.0.3",
+    "@types/amqplib": "^0.10.5",
     "@types/node": "^20.11.30",
     "source-map-support": "^0.5.21",
     "typescript": "~5.4.3"

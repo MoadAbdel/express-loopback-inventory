@@ -2,6 +2,7 @@ import {repository} from '@loopback/repository';
 import {post, get, requestBody} from '@loopback/rest';
 import {Order} from '../models';
 import {OrderRepository} from '../repositories';
+import {publishOrderCreated} from '../queue/rabbitmq';
 
 export class OrderController {
   constructor(
@@ -28,7 +29,11 @@ export class OrderController {
     })
     order: Omit<Order, 'id'>,
   ): Promise<Order> {
-    return this.orderRepository.create(order);
+    const created = await this.orderRepository.create(order);
+    // Le paiement est traite de facon asynchrone par le
+    // microservice payment, decouple via RabbitMQ.
+    await publishOrderCreated(created);
+    return created;
   }
 
   @get('/orders')
